@@ -1,0 +1,41 @@
+***：1、LVS有三种IP负载均衡技术（VS/NAT、VS/TUN和VS/DR），十种调度算法（rrr|wrr|lc|wlc|lblc|lblcr|dh|sh|sed|nq）
+	 2、Keepalived在这里主要用作RealServer的健康状态检查以及Master主机和BackUP主机之间failover的实现
+
+1>、准备四台服务器和一个VIP（Virtual IP）为192.168.241.200(虚拟IP:web访问通过此IP访问真实webserver)
+
+2>、所有服务器：
+				1）、绑定静态IP地址(一般不会是动态IP，可不改；ifconfig查看)
+				2）、设定主机名(vi /etc/sysconfig/network)
+				3）、重启
+				4）、IP地址和主机名的绑定(vi /etc/hosts添加四台服务器IP 主机名[192.168.80.100 lvs-master])
+				5）、防火墙添加80端口
+
+3>、配置两台真实webserver：
+				1）、开启httpd服务；
+				2）、绑定虚拟IP：
+						方法一：
+								1、cd /etc/init.d
+								2、vi realserver
+								3、代码见realserver文件
+								4、chmod 755 realserver
+								5、servive realserver start
+						方法二(未验证)：
+								1、在realserver文件头部加添加 #!/bin/bash
+								2、代码见realserver文件
+								3、sh realserver.sh start
+						查看是否绑定成功命令：ip addr
+
+4>、配置两台(主备)Lvs+keepalived服务器：
+				1）、yum install -y keepalived ipvsadm
+				2）、配置keepalived(vi /etc/keepalived/keepalived.conf)
+				3）、配置信息详见keepalived.conf(主备都需要配，有两处不同)
+				4）、service keepalived start(先主后从)
+				5）、查看是否成功：ipvsadm -L
+				6）、查看keepalived日志文件：tail -f /var/log/messages
+		***:直接编译的keepalived不同上步骤；conf文件在/usr/local/etc/keepalived/
+
+5>、测试： 
+  				1）、关闭其中一台负载均衡服务器
+  				2）、关闭其中一台真实服务器
+  				
+			

@@ -1,0 +1,26 @@
+1>、准备三台服务器（a[主服务器:负责分发请求],b[真实服务器,部署项目代码],c[真实服务器,部署项目代码]）
+2>、a服务器设置：
+                nginx.conf
+                            http段加入：upstream a.com {
+                                              server  192.168.241.135:80;
+                                              server  192.168.241.134:80;
+                                        }
+                            server段加入：server_name a.com;
+                                              location / {
+                                                          proxy_pass         http://a.com;
+                                                          proxy_set_header   Host             $host;
+                                                          proxy_set_header   X-Real-IP        $remote_addr;
+                                                          proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+                                                      }
+3>、b，c服务器设置：
+                添加一个server：
+                            server{
+                               listen 80;
+                               server_name a.com;
+                               index index.html;
+                               root /data0/htdocs/www;
+                            }
+注:  1>、可以把主服务器也当做真实服务器；只需更改监听端口；在upstream加入一个server；(未验证)
+     2>、主机挂了怎么办？可以用keepalived再来一台备用服务器监测；
+     3>、除了nginx可以做负载均衡外，lvs(效率高)和HAproxy也可以，还有F5等硬件也可以；
+     4>、lvs+keepalived ; nginx+keepalived;
