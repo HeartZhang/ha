@@ -1,0 +1,2 @@
+# ha
+LVS(nginx)+keepalived
